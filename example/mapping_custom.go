@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/scottjg/upnp"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/scottjg/upnp"
 )
 
 var mapping = new(upnp.Upnp)
@@ -44,7 +45,7 @@ tag:
 	fmt.Println("1.  stop    stop the program and reclaim mapped port")
 	fmt.Println("2.  add     add a port mapping")
 	fmt.Println("3.  del     manually delete a port mapping")
-	fmt.Println("\n NOTE: This progrma maps tcp ports. If you need to")
+	fmt.Println("\n NOTE: This program maps tcp ports. If you need to")
 	fmt.Println("       map a UDP port, please visit：")
 	fmt.Println("       http://github.com/prestonTao/upnp")
 	fmt.Println("--------------------------------------")
@@ -75,7 +76,7 @@ tag:
 }
 
 /*
-	检查网络是否支持upnp协议
+	Check whether the network supports upnp protocol
 */
 func CheckNet() bool {
 	err := mapping.SearchGateway()
@@ -86,7 +87,7 @@ func CheckNet() bool {
 	}
 }
 
-//获得公网ip地址
+// Obtain public ip address
 func ExternalIPAddr() {
 	err := mapping.ExternalIPAddr()
 	if err != nil {
@@ -96,9 +97,7 @@ func ExternalIPAddr() {
 	}
 }
 
-/*
-	得到用户输入的端口
-*/
+// Get the user input port
 func GetInput() bool {
 	var err error
 	fmt.Println("Enter the local port to map: ")
@@ -127,11 +126,9 @@ func GetInput() bool {
 	return true
 }
 
-/*
-	添加一个端口映射
-*/
+// Add a port mapping
 func AddPortMapping(localPort, remotePort int) bool {
-	//添加一个端口映射
+
 	if err := mapping.AddPortMapping(localPort, remotePort, "TCP"); err == nil {
 		fmt.Println("Port mapped successfully")
 		return true
@@ -141,9 +138,7 @@ func AddPortMapping(localPort, remotePort int) bool {
 	}
 }
 
-/*
-	删除一个端口映射
-*/
+// Delete a port mapping
 func DelPortMapping(localPort, remotePort int) {
 	mapping.DelPortMapping(remotePort, "TCP")
 }

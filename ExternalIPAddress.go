@@ -24,14 +24,14 @@ func (this *ExternalIPAddress) Send() bool {
 	return false
 }
 func (this *ExternalIPAddress) BuildRequest() *http.Request {
-	//请求头
+	// Request header
 	header := http.Header{}
 	header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
 	header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#GetExternalIPAddress"`)
 	header.Set("Content-Type", "text/xml")
 	header.Set("Connection", "Close")
 	header.Set("Content-Length", "")
-	//请求体
+	// Request body
 	body := Node{Name: "SOAP-ENV:Envelope",
 		Attr: map[string]string{"xmlns:SOAP-ENV": `"http://schemas.xmlsoap.org/soap/envelope/"`,
 			"SOAP-ENV:encodingStyle": `"http://schemas.xmlsoap.org/soap/encoding/"`}}
@@ -42,7 +42,7 @@ func (this *ExternalIPAddress) BuildRequest() *http.Request {
 	body.AddChild(childOne)
 
 	bodyStr := body.BuildXML()
-	//请求
+	// Request
 	request, _ := http.NewRequest("POST", "http://"+this.upnp.Gateway.Host+this.upnp.CtrlUrl,
 		strings.NewReader(bodyStr))
 	request.Header = header
@@ -50,29 +50,29 @@ func (this *ExternalIPAddress) BuildRequest() *http.Request {
 	return request
 }
 
-//NewExternalIPAddress
+// NewExternalIPAddress
 func (this *ExternalIPAddress) resolve(resultStr string) {
 	inputReader := strings.NewReader(resultStr)
 	decoder := xml.NewDecoder(inputReader)
 	ISexternalIP := false
 	for t, err := decoder.Token(); err == nil; t, err = decoder.Token() {
 		switch token := t.(type) {
-		// 处理元素开始（标签）
+		// Processing element start (label)
 		case xml.StartElement:
 			name := token.Name.Local
 			if name == "NewExternalIPAddress" {
 				ISexternalIP = true
 			}
-		// 处理元素结束（标签）
+		// Process element end (label)
 		case xml.EndElement:
-		// 处理字符数据（这里就是元素的文本）
+		// Processing character data (here is the text of the element)
 		case xml.CharData:
 			if ISexternalIP == true {
 				this.upnp.GatewayOutsideIP = string([]byte(token))
 				return
 			}
 		default:
-			// ...
+			// TODO: wht?
 		}
 	}
 }
