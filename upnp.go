@@ -7,18 +7,16 @@ import (
 	"sync"
 )
 
-/*
- * 得到网关
- */
+// Get the Gateway
 
-//对所有的端口进行管理
+// Manage all Ports
 type MappingPortStruct struct {
 	lock         *sync.Mutex
 	mappingPorts map[string][][]int
 }
 
-//添加一个端口映射记录
-//只对映射进行管理
+// Add a port mapping record
+// only map management
 func (this *MappingPortStruct) addMapping(localPort, remotePort int, protocol string) {
 
 	this.lock.Lock()
@@ -48,8 +46,8 @@ func (this *MappingPortStruct) addMapping(localPort, remotePort int, protocol st
 	this.mappingPorts[protocol] = [][]int{one, two}
 }
 
-//删除一个映射记录
-//只对映射进行管理
+// Delete a mapping record
+// only map management
 func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -60,7 +58,7 @@ func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
 	mappings := this.mappingPorts[protocol]
 	for i := 0; i < len(mappings[0]); i++ {
 		if mappings[1][i] == remotePort {
-			//要删除的映射
+			// the map to delete
 			break
 		}
 		tmp.addMapping(mappings[0][i], mappings[1][i], protocol)
@@ -72,24 +70,23 @@ func (this *MappingPortStruct) GetAllMapping() map[string][][]int {
 }
 
 type Upnp struct {
-	Active              bool //这个upnp协议是否可用
+	Active              bool // is this upnp protocol available?
 	DurationUnsupported bool
-	LocalHost           string            //本机ip地址
-	GatewayInsideIP     string            //局域网网关ip
-	GatewayOutsideIP    string            //网关公网ip
-	OutsideMappingPort  map[string]int    //映射外部端口
-	InsideMappingPort   map[string]int    //映射本机端口
-	Gateway             *Gateway          //网关信息
-	CtrlUrl             string            //控制请求url
-	MappingPort         MappingPortStruct //已经添加了的映射 {"TCP":[1990],"UDP":[1991]}
+	LocalHost           string            // local (our) IP Address
+	GatewayInsideIP     string            // LAN Gateway IP
+	GatewayOutsideIP    string            // Gateway Public IP
+	OutsideMappingPort  map[string]int    // Map the external port
+	InsideMappingPort   map[string]int    // Map local port
+	Gateway             *Gateway          // Gateway information
+	CtrlUrl             string            // Control request URL
+	MappingPort         MappingPortStruct // Existing mappings, e.g {"TCP":[1990],"UDP":[1991]}
 }
 
-//得到本地联网的ip地址
-//得到局域网网关ip
+// SearchGateway gets the Gateway's LAN IP address
 func (this *Upnp) SearchGateway() (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
-			log.Println("upnp模块报错了", errTemp)
+			log.Println("upnp module error:", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -112,7 +109,7 @@ func (this *Upnp) deviceStatus() {
 
 }
 
-//查看设备描述，得到控制请求url
+// View the device description and get the control request URL
 func (this *Upnp) deviceDesc() (err error) {
 	if this.GatewayInsideIP == "" {
 		if err := this.SearchGateway(); err != nil {
@@ -122,11 +119,11 @@ func (this *Upnp) deviceDesc() (err error) {
 	device := DeviceDesc{upnp: this}
 	device.Send()
 	this.Active = true
-	// log.Println("获得控制请求url:", this.CtrlUrl)
+	// log.Println("control request URL:", this.CtrlUrl)
 	return
 }
 
-//查看公网ip地址
+// ExternalIPAddr gets our external IP address
 func (this *Upnp) ExternalIPAddr() (err error) {
 	if this.CtrlUrl == "" {
 		if err := this.deviceDesc(); err != nil {
@@ -136,14 +133,15 @@ func (this *Upnp) ExternalIPAddr() (err error) {
 	eia := ExternalIPAddress{upnp: this}
 	eia.Send()
 	return nil
-	// log.Println("获得公网ip地址为：", this.GatewayOutsideIP)
+	// log.Println("public IP address:", this.GatewayOutsideIP)
 }
 
-//添加一个端口映射
+// AddPortMapping adds a port mapping
+// TODO: accept an IP address to port forward to another LAN host
 func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol string, desc string) (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
-			log.Println("upnp module being given", errTemp)
+			log.Println("upnp module error:", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -155,15 +153,17 @@ func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol s
 	addPort := AddPortMapping{upnp: this}
 	if issuccess := addPort.Send(localPort, remotePort, duration, protocol, desc); issuccess {
 		this.MappingPort.addMapping(localPort, remotePort, protocol)
-		// log.Println("添加一个端口映射：protocol:", protocol, "local:", localPort, "remote:", remotePort)
+		// log.Println("add port mapping：protocol:", protocol, "local:", localPort, "remote:", remotePort)
 		return nil
 	} else {
 		this.Active = false
-		// log.Println("添加一个端口映射失败")
+		// log.Println("failed to add port mapping")
+		// TODO: is it possible to get an error from gateway instead of showing our own?
 		return errors.New("Adding a port mapping failed")
 	}
 }
 
+// DelPortMapping probably deletes a port mapping
 func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 	delMapping := DelPortMapping{upnp: this}
 	issuccess := delMapping.Send(remotePort, protocol)
@@ -174,7 +174,7 @@ func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 	return issuccess
 }
 
-//回收端口
+// Reclaim recycles (deletes?) a port
 func (this *Upnp) Reclaim() {
 	mappings := this.MappingPort.GetAllMapping()
 	tcpMapping, ok := mappings["TCP"]
@@ -191,6 +191,8 @@ func (this *Upnp) Reclaim() {
 	}
 }
 
+// GetAllMapping returns all active mappings
+// TODO: for this host only?
 func (this *Upnp) GetAllMapping() map[string][][]int {
 	return this.MappingPort.GetAllMapping()
 }
