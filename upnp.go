@@ -137,8 +137,8 @@ func (this *Upnp) ExternalIPAddr() (err error) {
 }
 
 // AddPortMapping adds a port mapping
-// TODO: accept an IP address to port forward to another LAN host
-func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol string, desc string) (err error) {
+// TODO: accept an IP address to port forward to another LAN host(internalClient)
+func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, internalClient string, protocol string, desc string) (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
 			log.Println("upnp module error:", errTemp)
@@ -151,7 +151,7 @@ func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol s
 		}
 	}
 	addPort := AddPortMapping{upnp: this}
-	if issuccess := addPort.Send(localPort, remotePort, duration, protocol, desc); issuccess {
+	if issuccess := addPort.Send(localPort, remotePort, duration, internalClient, protocol, desc); issuccess {
 		this.MappingPort.addMapping(localPort, remotePort, protocol)
 		// log.Println("add port mapping：protocol:", protocol, "local:", localPort, "remote:", remotePort)
 		return nil

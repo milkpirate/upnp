@@ -13,9 +13,9 @@ type AddPortMapping struct {
 	upnp *Upnp
 }
 
-func (this *AddPortMapping) Send(localPort, remotePort, duration int, protocol string, desc string) bool {
+func (this *AddPortMapping) Send(localPort, remotePort, duration int, internalClient string, protocol string, desc string) bool {
 	if !this.upnp.DurationUnsupported {
-		request := this.buildRequest(localPort, remotePort, duration, protocol, desc)
+		request := this.buildRequest(localPort, remotePort, duration, internalClient, protocol, desc)
 		response, _ := http.DefaultClient.Do(request)
 		resultBody, _ := ioutil.ReadAll(response.Body)
 		if response.StatusCode == 200 {
@@ -27,7 +27,7 @@ func (this *AddPortMapping) Send(localPort, remotePort, duration int, protocol s
 		}
 	}
 
-	request := this.buildRequest(localPort, remotePort, 0, protocol, desc)
+	request := this.buildRequest(localPort, remotePort, 0, internalClient, protocol, desc)
 	response, _ := http.DefaultClient.Do(request)
 	resultBody, _ := ioutil.ReadAll(response.Body)
 	if response.StatusCode == 200 {
@@ -37,7 +37,7 @@ func (this *AddPortMapping) Send(localPort, remotePort, duration int, protocol s
 
 	return false
 }
-func (this *AddPortMapping) buildRequest(localPort, remotePort, duration int, protocol string, desc string) *http.Request {
+func (this *AddPortMapping) buildRequest(localPort, remotePort, duration int, internalClient string, protocol string, desc string) *http.Request {
 	// Request header
 	header := http.Header{}
 	header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
@@ -57,7 +57,7 @@ func (this *AddPortMapping) buildRequest(localPort, remotePort, duration int, pr
 	childList2 := Node{Name: "NewInternalPort", Content: strconv.Itoa(localPort)}
 	childList3 := Node{Name: "NewProtocol", Content: protocol}
 	childList4 := Node{Name: "NewEnabled", Content: "1"}
-	childList5 := Node{Name: "NewInternalClient", Content: this.upnp.LocalHost}
+	childList5 := Node{Name: "NewInternalClient", Content: internalClient}
 	childList6 := Node{Name: "NewLeaseDuration", Content: strconv.Itoa(duration)}
 	childList7 := Node{Name: "NewPortMappingDescription", Content: desc}
 	childList8 := Node{Name: "NewRemoteHost"}
