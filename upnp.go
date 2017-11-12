@@ -1,9 +1,8 @@
 package upnp
 
 import (
-	// "fmt"
 	"errors"
-	"log"
+	"fmt"
 	"sync"
 )
 
@@ -86,7 +85,7 @@ type Upnp struct {
 func (this *Upnp) SearchGateway() (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
-			log.Println("upnp module error:", errTemp)
+			fmt.Println("SearchGateway:", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -119,7 +118,7 @@ func (this *Upnp) deviceDesc() (err error) {
 	device := DeviceDesc{upnp: this}
 	device.Send()
 	this.Active = true
-	// log.Println("control request URL:", this.CtrlUrl)
+
 	return
 }
 
@@ -132,8 +131,8 @@ func (this *Upnp) ExternalIPAddr() (err error) {
 	}
 	eia := ExternalIPAddress{upnp: this}
 	eia.Send()
+
 	return nil
-	// log.Println("public IP address:", this.GatewayOutsideIP)
 }
 
 // AddPortMapping adds a port mapping
@@ -141,7 +140,7 @@ func (this *Upnp) ExternalIPAddr() (err error) {
 func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, internalClient string, protocol string, desc string) (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
-			log.Println("upnp module error:", errTemp)
+			fmt.Println("AddPortMapping:", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -153,11 +152,11 @@ func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, internalCl
 	addPort := AddPortMapping{upnp: this}
 	if issuccess := addPort.Send(localPort, remotePort, duration, internalClient, protocol, desc); issuccess {
 		this.MappingPort.addMapping(localPort, remotePort, protocol)
-		// log.Println("add port mapping：protocol:", protocol, "local:", localPort, "remote:", remotePort)
+
 		return nil
 	} else {
 		this.Active = false
-		// log.Println("failed to add port mapping")
+		// fmt.Println("failed to add port mapping")
 		// TODO: is it possible to get an error from gateway instead of showing our own?
 		return errors.New("Adding a port mapping failed")
 	}
@@ -169,7 +168,7 @@ func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 	issuccess := delMapping.Send(remotePort, protocol)
 	if issuccess {
 		this.MappingPort.delMapping(remotePort, protocol)
-		log.Println("Removed a port mapping: remote:", remotePort)
+		fmt.Println("Removed a port mapping: remote:", remotePort)
 	}
 	return issuccess
 }

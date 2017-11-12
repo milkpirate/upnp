@@ -3,6 +3,7 @@ package upnp
 import (
 	// "log"
 	// "fmt"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -14,24 +15,44 @@ type AddPortMapping struct {
 }
 
 func (this *AddPortMapping) Send(localPort, remotePort, duration int, internalClient string, protocol string, desc string) bool {
+
 	if !this.upnp.DurationUnsupported {
 		request := this.buildRequest(localPort, remotePort, duration, internalClient, protocol, desc)
-		response, _ := http.DefaultClient.Do(request)
-		resultBody, _ := ioutil.ReadAll(response.Body)
+
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			fmt.Println("http.DurationUnsupported.Do:", err)
+		}
+
+		result, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			fmt.Println("ioutil.ReadAll:", err)
+		}
+
 		if response.StatusCode == 200 {
-			this.resolve(string(resultBody))
+			this.resolve(string(result))
 			return true
 		}
-		if strings.Contains(string(resultBody), "<errorDescription>OnlyPermanentLeasesSupported</errorDescription>") {
+
+		if strings.Contains(string(result), "<errorDescription>OnlyPermanentLeasesSupported</errorDescription>") {
 			this.upnp.DurationUnsupported = true
 		}
 	}
 
 	request := this.buildRequest(localPort, remotePort, 0, internalClient, protocol, desc)
-	response, _ := http.DefaultClient.Do(request)
-	resultBody, _ := ioutil.ReadAll(response.Body)
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		fmt.Println("http.DetClient.Do:", err)
+	}
+
+	result, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println("ioutil.ReadAll:", err)
+	}
+
 	if response.StatusCode == 200 {
-		this.resolve(string(resultBody))
+		this.resolve(string(result))
 		return true
 	}
 
@@ -75,8 +96,13 @@ func (this *AddPortMapping) buildRequest(localPort, remotePort, duration int, in
 	bodyStr := body.BuildXML()
 
 	// request
-	request, _ := http.NewRequest("POST", "http://"+this.upnp.Gateway.Host+this.upnp.CtrlUrl,
+	request, err := http.NewRequest("POST", "http://"+this.upnp.Gateway.Host+this.upnp.CtrlUrl,
 		strings.NewReader(bodyStr))
+	if err != nil {
+		fmt.Println("http.NewRequest:", err)
+		return nil
+	}
+
 	request.Header = header
 	request.Header.Set("Content-Length", strconv.Itoa(len([]byte(bodyStr))))
 	return request
