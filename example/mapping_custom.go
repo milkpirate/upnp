@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/scottjg/upnp"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/scottjg/upnp"
 )
 
 var mapping = new(upnp.Upnp)
@@ -131,8 +132,8 @@ func GetInput() bool {
 	添加一个端口映射
 */
 func AddPortMapping(localPort, remotePort int) bool {
-	//添加一个端口映射
-	if err := mapping.AddPortMapping(localPort, remotePort, "TCP"); err == nil {
+	//添加一个端口映射 localPort, remotePort, duration int, protocol string, desc string
+	if err := mapping.AddPortMapping(localPort, remotePort, 10, "TCP", "wireguard"); err == nil {
 		fmt.Println("Port mapped successfully")
 		return true
 	} else {
