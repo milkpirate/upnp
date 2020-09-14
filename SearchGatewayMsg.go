@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"syscall"
 	"time"
 	// "net/http"
 )
@@ -70,10 +71,14 @@ func (this *SearchGateway) send(c chan string) {
 		log.Println("The local ip address is not in the correct format")
 	}
 	conn, err = net.ListenUDP("udp", locaAddr)
+
+	setTTL(conn, 2)
+
 	defer conn.Close()
 	if err != nil {
 		log.Println("Failed to bind udp multicast socket")
 	}
+
 	_, err = conn.WriteToUDP([]byte(this.searchMessage), remotAddr)
 	if err != nil {
 		log.Println("An error occurred sending msg to the multicast address")
@@ -118,4 +123,14 @@ func (this *SearchGateway) resolve(result string) {
 		default:
 		}
 	}
+}
+
+func setTTL(conn *net.UDPConn, ttl int) error {
+	f, err := conn.File()
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	fd := int(f.Fd())
+	return syscall.SetsockoptInt(fd, syscall.SOL_IP, syscall.IP_MULTICAST_TTL, ttl)
 }
