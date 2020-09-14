@@ -4,8 +4,9 @@ import (
 	"log"
 	"net"
 	"strings"
-	"syscall"
 	"time"
+
+	"golang.org/x/net/ipv4"
 	// "net/http"
 )
 
@@ -72,14 +73,18 @@ func (this *SearchGateway) send(c chan string) {
 	}
 	conn, err = net.ListenUDP("udp", locaAddr)
 
-	setTTL(conn, 2)
+	p := ipv4.NewPacketConn(conn)
+
+	p.SetTTL(2)
 
 	defer conn.Close()
 	if err != nil {
 		log.Println("Failed to bind udp multicast socket")
 	}
 
-	_, err = conn.WriteToUDP([]byte(this.searchMessage), remotAddr)
+	// _, err = conn.WriteToUDP([]byte(this.searchMessage), remotAddr)
+
+	_, err = p.WriteTo([]byte(this.searchMessage), nil, remotAddr)
 	if err != nil {
 		log.Println("An error occurred sending msg to the multicast address")
 	}
@@ -123,14 +128,4 @@ func (this *SearchGateway) resolve(result string) {
 		default:
 		}
 	}
-}
-
-func setTTL(conn *net.UDPConn, ttl int) error {
-	f, err := conn.File()
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	fd := int(f.Fd())
-	return syscall.SetsockoptInt(fd, syscall.SOL_IP, syscall.IP_MULTICAST_TTL, ttl)
 }
