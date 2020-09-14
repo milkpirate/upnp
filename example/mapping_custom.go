@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/scottjg/upnp"
+	"github.com/inverse-inc/upnp"
 )
 
 var mapping = new(upnp.Upnp)

@@ -3,7 +3,8 @@ package main
 import (
 	// "bufio"
 	"fmt"
-	"github.com/scottjg/upnp"
+
+	"github.com/inverse-inc/upnp"
 	// "os"
 )
 
