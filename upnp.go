@@ -3,22 +3,14 @@ package upnp
 import (
 	// "fmt"
 	"errors"
-	"log"
 	"sync"
 )
 
-/*
- * 得到网关
- */
-
-//对所有的端口进行管理
 type MappingPortStruct struct {
 	lock         *sync.Mutex
 	mappingPorts map[string][][]int
 }
 
-//添加一个端口映射记录
-//只对映射进行管理
 func (this *MappingPortStruct) addMapping(localPort, remotePort int, protocol string) {
 
 	this.lock.Lock()
@@ -48,8 +40,6 @@ func (this *MappingPortStruct) addMapping(localPort, remotePort int, protocol st
 	this.mappingPorts[protocol] = [][]int{one, two}
 }
 
-//删除一个映射记录
-//只对映射进行管理
 func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -60,8 +50,7 @@ func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
 	mappings := this.mappingPorts[protocol]
 	for i := 0; i < len(mappings[0]); i++ {
 		if mappings[1][i] == remotePort {
-			//要删除的映射
-			break
+			continue
 		}
 		tmp.addMapping(mappings[0][i], mappings[1][i], protocol)
 	}
@@ -72,24 +61,21 @@ func (this *MappingPortStruct) GetAllMapping() map[string][][]int {
 }
 
 type Upnp struct {
-	Active              bool //这个upnp协议是否可用
+	Active              bool
 	DurationUnsupported bool
-	LocalHost           string            //本机ip地址
-	GatewayInsideIP     string            //局域网网关ip
-	GatewayOutsideIP    string            //网关公网ip
-	OutsideMappingPort  map[string]int    //映射外部端口
-	InsideMappingPort   map[string]int    //映射本机端口
-	Gateway             *Gateway          //网关信息
-	CtrlUrl             string            //控制请求url
-	MappingPort         MappingPortStruct //已经添加了的映射 {"TCP":[1990],"UDP":[1991]}
+	LocalHost           string
+	GatewayInsideIP     string
+	GatewayOutsideIP    string
+	OutsideMappingPort  map[string]int
+	InsideMappingPort   map[string]int
+	Gateway             *Gateway
+	CtrlUrl             string
+	MappingPort         MappingPortStruct
 }
 
-//得到本地联网的ip地址
-//得到局域网网关ip
 func (this *Upnp) SearchGateway() (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
-			log.Println("upnp模块报错了", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -97,7 +83,6 @@ func (this *Upnp) SearchGateway() (err error) {
 	if this.LocalHost == "" {
 		this.MappingPort = MappingPortStruct{
 			lock: new(sync.Mutex),
-			// mappingPorts: map[string][][]int{},
 		}
 		this.LocalHost = GetLocalIntenetIp()
 	}
@@ -112,7 +97,6 @@ func (this *Upnp) deviceStatus() {
 
 }
 
-//查看设备描述，得到控制请求url
 func (this *Upnp) deviceDesc() (err error) {
 	if this.GatewayInsideIP == "" {
 		if err := this.SearchGateway(); err != nil {
@@ -122,11 +106,9 @@ func (this *Upnp) deviceDesc() (err error) {
 	device := DeviceDesc{upnp: this}
 	device.Send()
 	this.Active = true
-	// log.Println("获得控制请求url:", this.CtrlUrl)
 	return
 }
 
-//查看公网ip地址
 func (this *Upnp) ExternalIPAddr() (err error) {
 	if this.CtrlUrl == "" {
 		if err := this.deviceDesc(); err != nil {
@@ -136,14 +118,11 @@ func (this *Upnp) ExternalIPAddr() (err error) {
 	eia := ExternalIPAddress{upnp: this}
 	eia.Send()
 	return nil
-	// log.Println("获得公网ip地址为：", this.GatewayOutsideIP)
 }
 
-//添加一个端口映射
 func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol string, desc string) (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
-			log.Println("upnp module being given", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -155,11 +134,9 @@ func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol s
 	addPort := AddPortMapping{upnp: this}
 	if issuccess := addPort.Send(localPort, remotePort, duration, protocol, desc); issuccess {
 		this.MappingPort.addMapping(localPort, remotePort, protocol)
-		// log.Println("添加一个端口映射：protocol:", protocol, "local:", localPort, "remote:", remotePort)
 		return nil
 	} else {
 		this.Active = false
-		// log.Println("添加一个端口映射失败")
 		return errors.New("Adding a port mapping failed")
 	}
 }
@@ -169,7 +146,6 @@ func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 	issuccess := delMapping.Send(remotePort, protocol)
 	if issuccess {
 		this.MappingPort.delMapping(remotePort, protocol)
-		log.Println("Removed a port mapping: remote:", remotePort)
 	}
 	return issuccess
 }
@@ -180,7 +156,6 @@ func (this *Upnp) GetListOfPortMappings() []PortMappingEntry {
 	return portmap
 }
 
-//回收端口
 func (this *Upnp) Reclaim() {
 	mappings := this.MappingPort.GetAllMapping()
 	tcpMapping, ok := mappings["TCP"]
