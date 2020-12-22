@@ -150,9 +150,9 @@ func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 	return issuccess
 }
 
-func (this *Upnp) GetListOfPortMappings() []PortMappingEntry {
+func (this *Upnp) GetListOfPortMappings(protocol string) []PortMappingEntry {
 	listPort := GetListOfPortMappings{upnp: this}
-	portmap := listPort.Send()
+	portmap := listPort.Send(protocol)
 	return portmap
 }
 

@@ -14,8 +14,8 @@ type GetListOfPortMappings struct {
 	upnp *Upnp
 }
 
-func (this *GetListOfPortMappings) Send() []PortMappingEntry {
-	request := this.buildRequest()
+func (this *GetListOfPortMappings) Send(protocol string) []PortMappingEntry {
+	request := this.buildRequest(protocol)
 	response, _ := http.DefaultClient.Do(request)
 	resultBody, _ := ioutil.ReadAll(response.Body)
 	if response.StatusCode == 200 {
@@ -29,7 +29,7 @@ func (this *GetListOfPortMappings) Send() []PortMappingEntry {
 	return nil
 }
 
-func (this *GetListOfPortMappings) buildRequest() *http.Request {
+func (this *GetListOfPortMappings) buildRequest(protocol string) *http.Request {
 	//请求头
 	header := http.Header{}
 	header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
@@ -47,7 +47,7 @@ func (this *GetListOfPortMappings) buildRequest() *http.Request {
 		Attr: map[string]string{"xmlns:m": `"urn:schemas-upnp-org:service:WANIPConnection:2"`}}
 	childList1 := Node{Name: "NewStartPort", Content: "1"}
 	childList2 := Node{Name: "NewEndPort", Content: "65535"}
-	childList3 := Node{Name: "NewProtocol", Content: "UDP"}
+	childList3 := Node{Name: "NewProtocol", Content: protocol}
 	childList4 := Node{Name: "NewManage", Content: "1"}
 	childList5 := Node{Name: "NewNumberOfPorts", Content: "65535"}
 
