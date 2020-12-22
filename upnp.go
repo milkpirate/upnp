@@ -156,6 +156,12 @@ func (this *Upnp) GetListOfPortMappings() []PortMappingEntry {
 	return portmap
 }
 
+func (this *Upnp) GetGenericPortMappingEntry(index string) PortMappingEntry {
+	listPort := GetGenericPortMappingEntry{upnp: this}
+	portmap := listPort.Send(index)
+	return portmap
+}
+
 func (this *Upnp) Reclaim() {
 	mappings := this.MappingPort.GetAllMapping()
 	tcpMapping, ok := mappings["TCP"]

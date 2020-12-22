@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 
-	// "log"
 	"encoding/xml"
 	"net/http"
 	"strconv"
@@ -20,7 +19,6 @@ func (this *GetListOfPortMappings) Send() []PortMappingEntry {
 	response, _ := http.DefaultClient.Do(request)
 	resultBody, _ := ioutil.ReadAll(response.Body)
 	if response.StatusCode == 200 {
-		// log.Println(string(resultBody))
 		portmap, err := this.resolve(string(resultBody))
 		if err != nil {
 			log.Println(err.Error())
@@ -30,6 +28,7 @@ func (this *GetListOfPortMappings) Send() []PortMappingEntry {
 	}
 	return nil
 }
+
 func (this *GetListOfPortMappings) buildRequest() *http.Request {
 	//请求头
 	header := http.Header{}
