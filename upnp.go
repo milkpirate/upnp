@@ -174,14 +174,10 @@ func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 	return issuccess
 }
 
-func (this *Upnp) GetListOfPortMappings() bool {
+func (this *Upnp) GetListOfPortMappings() []PortMappingEntry {
 	listPort := GetListOfPortMappings{upnp: this}
-	issuccess := listPort.Send()
-	if issuccess {
-		// this.MappingPort.delMapping(remotePort, protocol)
-		log.Println("Port listed")
-	}
-	return issuccess
+	portmap := listPort.Send()
+	return portmap
 }
 
 //回收端口

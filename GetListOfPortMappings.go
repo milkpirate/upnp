@@ -5,28 +5,30 @@ import (
 	"log"
 
 	// "log"
+	"encoding/xml"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type GetListOfPortMappings struct {
 	upnp *Upnp
 }
 
-func (this *GetListOfPortMappings) Send() bool {
+func (this *GetListOfPortMappings) Send() []PortMappingEntry {
 	request := this.buildRequest()
 	response, _ := http.DefaultClient.Do(request)
-	spew.Dump(response)
 	resultBody, _ := ioutil.ReadAll(response.Body)
 	if response.StatusCode == 200 {
-		log.Println(string(resultBody))
-		this.resolve(string(resultBody))
-		return true
+		// log.Println(string(resultBody))
+		portmap, err := this.resolve(string(resultBody))
+		if err != nil {
+			log.Println(err.Error())
+			return nil
+		}
+		return portmap
 	}
-	return false
+	return nil
 }
 func (this *GetListOfPortMappings) buildRequest() *http.Request {
 	//请求头
@@ -67,5 +69,50 @@ func (this *GetListOfPortMappings) buildRequest() *http.Request {
 	return request
 }
 
-func (this *GetListOfPortMappings) resolve(resultStr string) {
+func (this *GetListOfPortMappings) resolve(result string) ([]PortMappingEntry, error) {
+
+	res := &MyRespEnvelope{}
+	err := xml.Unmarshal([]byte(result), res)
+
+	if err != nil {
+		return nil, err
+	}
+	portmap := &PortMapList{}
+	err = xml.Unmarshal([]byte(res.Body.GetResponse.NewPortListing), portmap)
+	if err != nil {
+		return nil, err
+	}
+
+	return portmap.PortMappingEntry, nil
+}
+
+type MyRespEnvelope struct {
+	XMLName xml.Name
+	Body    Body
+}
+
+type Body struct {
+	XMLName     xml.Name
+	GetResponse NewPortListing `xml:"GetListOfPortMappingsResponse"`
+}
+
+type NewPortListing struct {
+	XMLName        xml.Name `xml:"GetListOfPortMappingsResponse"`
+	NewPortListing string   `xml:"NewPortListing"`
+}
+
+type PortMapList struct {
+	XMLName          xml.Name
+	PortMappingEntry []PortMappingEntry `xml: "PortMappingEntry`
+}
+
+type PortMappingEntry struct {
+	NewRemoteHost     string `xml: "NewRemoteHost"`
+	NewExternalPort   string `xml: "NewExternalPort"`
+	NewProtocol       string `xml: "NewProtocol"`
+	NewInternalPort   string `xml: "NewInternalPort"`
+	NewInternalClient string `xml: "NewInternalClient"`
+	NewEnabled        string `xml: "NewEnabled"`
+	NewDescription    string `xml: "NewDescription"`
+	NewLeaseTime      string `xml: "NewLeaseTime"`
 }
