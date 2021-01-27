@@ -4,6 +4,8 @@ import (
 	// "fmt"
 	"errors"
 	"sync"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 type MappingPortStruct struct {
@@ -151,6 +153,7 @@ func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 }
 
 func (this *Upnp) GetListOfPortMappings(protocol string) []PortMappingEntry {
+	spew.Dump(this)
 	listPort := GetListOfPortMappings{upnp: this}
 	portmap := listPort.Send(protocol)
 	return portmap
