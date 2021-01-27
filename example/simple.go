@@ -4,7 +4,7 @@ import (
 	// "bufio"
 	"fmt"
 
-	"github.com/inverse-inc/upnp"
+	"github.com/fdurand/upnp"
 	// "os"
 )
 

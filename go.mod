@@ -1,4 +1,4 @@
-module github.com/inverse-inc/upnp
+module github.com/fdurand/upnp
 
 go 1.15
 
