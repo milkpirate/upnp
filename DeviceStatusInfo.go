@@ -9,16 +9,13 @@ import (
 )
 
 type SearchGatewayReq struct {
-	host       string
-	resultBody string
-	ctrlUrl    string
-	upnp       *Upnp
+	upnp *Upnp
 }
 
-func (this SearchGatewayReq) Send() {
-	// request := this.BuildRequest()
+func (s SearchGatewayReq) Send() {
+	// request := s.BuildRequest()
 }
-func (this SearchGatewayReq) BuildRequest() *http.Request {
+func (s SearchGatewayReq) BuildRequest() *http.Request {
 	// Request header
 	header := http.Header{}
 	header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
@@ -37,7 +34,7 @@ func (this SearchGatewayReq) BuildRequest() *http.Request {
 	body.AddChild(childOne)
 	bodyStr := body.BuildXML()
 	// Request
-	request, _ := http.NewRequest("POST", "http://"+this.upnp.Gateway.Host+this.upnp.CtrlUrl,
+	request, _ := http.NewRequest("POST", "http://"+s.upnp.Gateway.Host+s.upnp.CtrlUrl,
 		strings.NewReader(bodyStr))
 	request.Header = header
 	request.Header.Set("Content-Length", strconv.Itoa(len([]byte(bodyStr))))

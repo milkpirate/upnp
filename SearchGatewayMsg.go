@@ -1,6 +1,7 @@
 package upnp
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -15,7 +16,6 @@ type Gateway struct {
 	Cache         string
 	ST            string
 	USN           string
-	deviceType    string // Device URN   "urn:schemas-upnp-org:service:WANIPConnection:1"
 	ControlURL    string
 	ServiceType   string
 }
@@ -46,13 +46,13 @@ func (this *SearchGateway) send(c chan string) {
 	var conn *net.UDPConn
 	defer func() {
 		if r := recover(); r != nil {
-			// Time out
+			fmt.Println("Recovered Timeout:\n", r)
 		}
 	}()
 	go func(conn *net.UDPConn) {
 		defer func() {
 			if r := recover(); r != nil {
-				// No overtime
+				fmt.Println("Recovered Timeout:\n", r)
 			}
 		}()
 		// The timeout is 3 seconds
@@ -71,7 +71,7 @@ func (this *SearchGateway) send(c chan string) {
 	}
 	conn, err = net.ListenUDP("udp", locaAddr)
 
-	setTTL(conn, 2)
+	_ = setTTL(conn, 2)
 
 	defer conn.Close()
 	if err != nil {

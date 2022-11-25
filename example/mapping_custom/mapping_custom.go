@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/scottjg/upnp"
+	"github.com/milkpirate/upnp"
 )
 
 var mapping = new(upnp.Upnp)
@@ -75,9 +75,7 @@ tag:
 
 }
 
-/*
-	Check whether the network supports upnp protocol
-*/
+// CheckNet Check whether the network supports upnp protocol
 func CheckNet() bool {
 	err := mapping.SearchGateway()
 	if err != nil {
@@ -87,7 +85,7 @@ func CheckNet() bool {
 	}
 }
 
-// Obtain public ip address
+// ExternalIPAddr Obtain public ip address
 func ExternalIPAddr() {
 	err := mapping.ExternalIPAddr()
 	if err != nil {
@@ -97,7 +95,7 @@ func ExternalIPAddr() {
 	}
 }
 
-// Get the user input port
+// GetInput Get the user input port
 func GetInput() bool {
 	var err error
 	fmt.Println("Enter the local port to map: ")
@@ -126,10 +124,9 @@ func GetInput() bool {
 	return true
 }
 
-// Add a port mapping
+// AddPortMapping Add a port mapping
 func AddPortMapping(localPort, remotePort int) bool {
-
-	if err := mapping.AddPortMapping(localPort, remotePort, "TCP"); err == nil {
+	if err := mapping.AddPortMapping(localPort, remotePort, 0, "TCP", "mapping"); err == nil {
 		fmt.Println("Port mapped successfully")
 		return true
 	} else {
@@ -138,7 +135,7 @@ func AddPortMapping(localPort, remotePort int) bool {
 	}
 }
 
-// Delete a port mapping
+// DelPortMapping Delete a port mapping
 func DelPortMapping(localPort, remotePort int) {
 	mapping.DelPortMapping(remotePort, "TCP")
 }

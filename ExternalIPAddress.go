@@ -3,6 +3,7 @@ package upnp
 import (
 	"encoding/xml"
 	"io/ioutil"
+
 	// "log"
 	"net/http"
 	"strconv"
@@ -54,20 +55,20 @@ func (this *ExternalIPAddress) BuildRequest() *http.Request {
 func (this *ExternalIPAddress) resolve(resultStr string) {
 	inputReader := strings.NewReader(resultStr)
 	decoder := xml.NewDecoder(inputReader)
-	ISexternalIP := false
+	isExternalIP := false
 	for t, err := decoder.Token(); err == nil; t, err = decoder.Token() {
 		switch token := t.(type) {
 		// Processing element start (label)
 		case xml.StartElement:
 			name := token.Name.Local
 			if name == "NewExternalIPAddress" {
-				ISexternalIP = true
+				isExternalIP = true
 			}
 		// Process element end (label)
 		case xml.EndElement:
 		// Processing character data (here is the text of the element)
 		case xml.CharData:
-			if ISexternalIP == true {
+			if isExternalIP {
 				this.upnp.GatewayOutsideIP = string([]byte(token))
 				return
 			}

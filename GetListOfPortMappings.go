@@ -102,16 +102,16 @@ type NewPortListing struct {
 
 type PortMapList struct {
 	XMLName          xml.Name
-	PortMappingEntry []PortMappingEntry `xml: "PortMappingEntry`
+	PortMappingEntry []PortMappingEntry `xml:"PortMappingEntry"`
 }
 
 type PortMappingEntry struct {
-	NewRemoteHost     string `xml: "NewRemoteHost"`
-	NewExternalPort   string `xml: "NewExternalPort"`
-	NewProtocol       string `xml: "NewProtocol"`
-	NewInternalPort   string `xml: "NewInternalPort"`
-	NewInternalClient string `xml: "NewInternalClient"`
-	NewEnabled        string `xml: "NewEnabled"`
-	NewDescription    string `xml: "NewDescription"`
-	NewLeaseTime      string `xml: "NewLeaseTime"`
+	NewRemoteHost     string `xml:"NewRemoteHost"`
+	NewExternalPort   string `xml:"NewExternalPort"`
+	NewProtocol       string `xml:"NewProtocol"`
+	NewInternalPort   string `xml:"NewInternalPort"`
+	NewInternalClient string `xml:"NewInternalClient"`
+	NewEnabled        string `xml:"NewEnabled"`
+	NewDescription    string `xml:"NewDescription"`
+	NewLeaseTime      string `xml:"NewLeaseTime"`
 }

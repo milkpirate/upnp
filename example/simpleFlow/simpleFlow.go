@@ -47,33 +47,6 @@ func youleTest() {
 	remotePort(rAddr + ":56688")
 }
 
-func simple1() {
-	lAddr := "192.168.1.100"
-	rAddr := "192.168.1.1"
-	//---------------------------------------------------------
-	//      Search gateway equipment
-	//---------------------------------------------------------
-
-	searchDevice(lAddr+":9981", "239.255.255.250:1900")
-
-	//---------------------------------------------------------
-	//      View the device description
-	//---------------------------------------------------------
-
-	// readDeviceDesc(rAddr + ":1900")
-
-	//---------------------------------------------------------
-	//      Check the device status SOAPAction: "urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo"\r\n
-	//---------------------------------------------------------
-	// getDeviceStatusInfo(rAddr + ":1900")
-
-	addPortMapping(rAddr + ":1900")
-
-	time.Sleep(time.Second * 10)
-
-	remotePort(rAddr + ":1900")
-}
-
 func searchDevice(localAddr, remoteAddr string) string {
 	fmt.Println("Searching for gateway device...")
 	msg := "M-SEARCH * HTTP/1.1\r\n" +
@@ -98,54 +71,6 @@ func searchDevice(localAddr, remoteAddr string) string {
 	return string(buf)
 }
 
-func readDeviceDesc(rAddr string) string {
-	fmt.Println("Fetching device description...")
-	msg := "GET /igd.xml HTTP/1.1\r\n" +
-		"User-Agent: Java/1.7.0_45\r\n" +
-		"Host: 192.168.1.1:1900\r\n" +
-		"Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n" +
-		"Connection: keep-alive\r\n\r\n"
-	conn, err := net.Dial("tcp", rAddr)
-	chk(err)
-	_, err = conn.Write([]byte(msg))
-	chk(err)
-	buf := make([]byte, 1024)
-	_, err = conn.Read(buf)
-	chk(err)
-	fmt.Println(string(buf))
-	buf = make([]byte, 3048)
-	_, err = conn.Read(buf)
-	chk(err)
-	fmt.Println(string(buf))
-
-	// //Check the device status
-	// fmt.Println("Check the device status")
-	// statusHeader := `POST /ipc HTTP/1.1\r\n
-	// Content-Type: text/xml\r\n
-	// SOAPAction: "urn:schemas-upnp-org:device:InternetGatewayDevice:1#GetStatusInfo"\r\n
-	// Connection: Close\r\n
-	// User-Agent: Java/1.7.0_45\r\n
-	// Host: 192.168.1.1:1900\r\n
-	// Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n
-	// Content-Length: 309\r\n
-	// \r\n`
-	// statusBody := `<?xml version="1.0"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><m:GetStatusInfo xmlns:m="urn:schemas-upnp-org:device:InternetGatewayDevice:1"></m:GetStatusInfo></SOAP-ENV:Body></SOAP-ENV:Envelope>`
-	// _, err = conn.Write([]byte(statusHeader))
-	// chk(err)
-	// _, err = conn.Write([]byte(statusBody))
-	// chk(err)
-
-	// buf = make([]byte, 1024)
-	// _, err = conn.Read(buf)
-	// chk(err)
-	// fmt.Println(string(buf))
-	// buf = make([]byte, 3048)
-	// _, err = conn.Read(buf)
-	// chk(err)
-	// fmt.Println(string(buf))
-	return string(buf)
-}
-
 func getDeviceStatusInfo(rAddr string) {
 
 	fmt.Println("Fetching device status...")
@@ -167,7 +92,7 @@ func getDeviceStatusInfo(rAddr string) {
 	request.Header.Set("SOAPAction", "\"urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo\"")
 
 	request.Header.Set("Connection", "Close")
-	request.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
+	request.Header.Set("Content-Length", fmt.Sprint(len([]byte(readMappingBody))))
 
 	response, _ := client.Do(request)
 
@@ -211,7 +136,7 @@ func addPortMapping(rAddr string) {
 	request.Header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#AddPortMapping"`)
 
 	request.Header.Set("Connection", "Close")
-	request.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
+	request.Header.Set("Content-Length", fmt.Sprint(len([]byte(readMappingBody))))
 
 	response, _ := client.Do(request)
 
@@ -249,7 +174,7 @@ func remotePort(rAddr string) {
 	request.Header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#DeletePortMapping"`)
 
 	request.Header.Set("Connection", "Close")
-	request.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
+	request.Header.Set("Content-Length", fmt.Sprint(len([]byte(readMappingBody))))
 
 	response, _ := client.Do(request)
 

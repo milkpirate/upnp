@@ -7,9 +7,10 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 )
+
 // Get the Gateway
 
-// Manage all Ports
+// MappingPortStruct Manage all Ports
 type MappingPortStruct struct {
 	lock         *sync.Mutex
 	mappingPorts map[string][][]int
@@ -17,45 +18,45 @@ type MappingPortStruct struct {
 
 // Add a port mapping record
 // only map management
-func (this *MappingPortStruct) addMapping(localPort, remotePort int, protocol string) {
+func (m *MappingPortStruct) addMapping(localPort, remotePort int, protocol string) {
 
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	if this.mappingPorts == nil {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if m.mappingPorts == nil {
 		one := make([]int, 0)
 		one = append(one, localPort)
 		two := make([]int, 0)
 		two = append(two, remotePort)
 		portMapping := [][]int{one, two}
-		this.mappingPorts = map[string][][]int{protocol: portMapping}
+		m.mappingPorts = map[string][][]int{protocol: portMapping}
 		return
 	}
-	portMapping := this.mappingPorts[protocol]
+	portMapping := m.mappingPorts[protocol]
 	if portMapping == nil {
 		one := make([]int, 0)
 		one = append(one, localPort)
 		two := make([]int, 0)
 		two = append(two, remotePort)
-		this.mappingPorts[protocol] = [][]int{one, two}
+		m.mappingPorts[protocol] = [][]int{one, two}
 		return
 	}
 	one := portMapping[0]
 	two := portMapping[1]
 	one = append(one, localPort)
 	two = append(two, remotePort)
-	this.mappingPorts[protocol] = [][]int{one, two}
+	m.mappingPorts[protocol] = [][]int{one, two}
 }
 
 // Delete a mapping record
 // only map management
-func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	if this.mappingPorts == nil {
+func (m *MappingPortStruct) delMapping(remotePort int, protocol string) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if m.mappingPorts == nil {
 		return
 	}
 	tmp := MappingPortStruct{lock: new(sync.Mutex)}
-	mappings := this.mappingPorts[protocol]
+	mappings := m.mappingPorts[protocol]
 	for i := 0; i < len(mappings[0]); i++ {
 		if mappings[1][i] == remotePort {
 			// the map to delete
@@ -63,10 +64,10 @@ func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
 		}
 		tmp.addMapping(mappings[0][i], mappings[1][i], protocol)
 	}
-	this.mappingPorts = tmp.mappingPorts
+	m.mappingPorts = tmp.mappingPorts
 }
-func (this *MappingPortStruct) GetAllMapping() map[string][][]int {
-	return this.mappingPorts
+func (m *MappingPortStruct) GetAllMapping() map[string][][]int {
+	return m.mappingPorts
 }
 
 type Upnp struct {
@@ -83,54 +84,50 @@ type Upnp struct {
 }
 
 // SearchGateway gets the Gateway's LAN IP address
-func (this *Upnp) SearchGateway() (err error) {
-	defer func(err error) {
+func (u *Upnp) SearchGateway() (err error) {
+	defer func() {
 		if errTemp := recover(); errTemp != nil {
 			fmt.Println("SearchGateway:", errTemp)
 			err = errTemp.(error)
 		}
-	}(err)
+	}()
 
-	if this.LocalHost == "" {
-		this.MappingPort = MappingPortStruct{
+	if u.LocalHost == "" {
+		u.MappingPort = MappingPortStruct{
 			lock: new(sync.Mutex),
 			// mappingPorts: map[string][][]int{},
 		}
-		this.LocalHost = GetLocalIntenetIp()
+		u.LocalHost = GetLocalIntenetIp()
 	}
-	searchGateway := SearchGateway{upnp: this}
+	searchGateway := SearchGateway{upnp: u}
 	if searchGateway.Send() {
 		return nil
 	}
-	return errors.New("No gateway device found")
-}
-
-func (this *Upnp) deviceStatus() {
-
+	return errors.New("no gateway device found")
 }
 
 // View the device description and get the control request URL
-func (this *Upnp) deviceDesc() (err error) {
-	if this.GatewayInsideIP == "" {
-		if err := this.SearchGateway(); err != nil {
+func (u *Upnp) deviceDesc() (err error) {
+	if u.GatewayInsideIP == "" {
+		if err := u.SearchGateway(); err != nil {
 			return err
 		}
 	}
-	device := DeviceDesc{upnp: this}
+	device := DeviceDesc{upnp: u}
 	device.Send()
-	this.Active = true
+	u.Active = true
 
 	return
 }
 
 // ExternalIPAddr gets our external IP address
-func (this *Upnp) ExternalIPAddr() (err error) {
-	if this.CtrlUrl == "" {
-		if err := this.deviceDesc(); err != nil {
+func (u *Upnp) ExternalIPAddr() (err error) {
+	if u.CtrlUrl == "" {
+		if err := u.deviceDesc(); err != nil {
 			return err
 		}
 	}
-	eia := ExternalIPAddress{upnp: this}
+	eia := ExternalIPAddress{upnp: u}
 	eia.Send()
 
 	return nil
@@ -138,74 +135,74 @@ func (this *Upnp) ExternalIPAddr() (err error) {
 
 // AddPortMapping adds a port mapping
 // TODO: accept an IP address to port forward to another LAN host(internalClient)
-func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, internalClient string, protocol string, desc string) (err error) {
-	defer func(err error) {
+func (u *Upnp) AddPortMapping(localPort, remotePort, duration int, internalClient string, protocol string, desc string) (err error) {
+	defer func() {
 		if errTemp := recover(); errTemp != nil {
 			fmt.Println("AddPortMapping:", errTemp)
 			err = errTemp.(error)
 		}
-	}(err)
-	if this.GatewayOutsideIP == "" {
-		if err := this.ExternalIPAddr(); err != nil {
+	}()
+	if u.GatewayOutsideIP == "" {
+		if err := u.ExternalIPAddr(); err != nil {
 			return err
 		}
 	}
-	addPort := AddPortMapping{upnp: this}
-	if issuccess := addPort.Send(localPort, remotePort, duration, internalClient, protocol, desc); issuccess {
-		this.MappingPort.addMapping(localPort, remotePort, protocol)
+	addPort := AddPortMapping{upnp: u}
+	if isSuccess := addPort.Send(localPort, remotePort, duration, internalClient, protocol, desc); isSuccess {
+		u.MappingPort.addMapping(localPort, remotePort, protocol)
 
 		return nil
 	} else {
-		this.Active = false
+		u.Active = false
 		// fmt.Println("failed to add port mapping")
 		// TODO: is it possible to get an error from gateway instead of showing our own?
-		return errors.New("Adding a port mapping failed")
+		return errors.New("adding a port mapping failed")
 	}
 }
 
 // DelPortMapping probably deletes a port mapping
-func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
-	delMapping := DelPortMapping{upnp: this}
-	issuccess := delMapping.Send(remotePort, protocol)
-	if issuccess {
-		this.MappingPort.delMapping(remotePort, protocol)
+func (u *Upnp) DelPortMapping(remotePort int, protocol string) bool {
+	delMapping := DelPortMapping{upnp: u}
+	isSuccess := delMapping.Send(remotePort, protocol)
+	if isSuccess {
+		u.MappingPort.delMapping(remotePort, protocol)
 		fmt.Println("Removed a port mapping: remote:", remotePort)
 	}
-	return issuccess
+	return isSuccess
 }
 
-func (this *Upnp) GetListOfPortMappings(protocol string) []PortMappingEntry {
-	spew.Dump(this)
-	listPort := GetListOfPortMappings{upnp: this}
-	portmap := listPort.Send(protocol)
-	return portmap
+func (u *Upnp) GetListOfPortMappings(protocol string) []PortMappingEntry {
+	spew.Dump(u)
+	listPort := GetListOfPortMappings{upnp: u}
+	portMap := listPort.Send(protocol)
+	return portMap
 }
 
-func (this *Upnp) GetGenericPortMappingEntry(index string) PortMappingEntry {
-	listPort := GetGenericPortMappingEntry{upnp: this}
-	portmap := listPort.Send(index)
-	return portmap
+func (u *Upnp) GetGenericPortMappingEntry(index string) PortMappingEntry {
+	listPort := GetGenericPortMappingEntry{upnp: u}
+	portMap := listPort.Send(index)
+	return portMap
 }
 
 // Reclaim recycles (deletes?) a port
-func (this *Upnp) Reclaim() {
-	mappings := this.MappingPort.GetAllMapping()
+func (u *Upnp) Reclaim() {
+	mappings := u.MappingPort.GetAllMapping()
 	tcpMapping, ok := mappings["TCP"]
 	if ok {
 		for i := 0; i < len(tcpMapping[0]); i++ {
-			this.DelPortMapping(tcpMapping[1][i], "TCP")
+			u.DelPortMapping(tcpMapping[1][i], "TCP")
 		}
 	}
 	udpMapping, ok := mappings["UDP"]
 	if ok {
 		for i := 0; i < len(udpMapping[0]); i++ {
-			this.DelPortMapping(udpMapping[0][i], "UDP")
+			u.DelPortMapping(udpMapping[0][i], "UDP")
 		}
 	}
 }
 
 // GetAllMapping returns all active mappings
 // TODO: for this host only?
-func (this *Upnp) GetAllMapping() map[string][][]int {
-	return this.MappingPort.GetAllMapping()
+func (u *Upnp) GetAllMapping() map[string][][]int {
+	return u.MappingPort.GetAllMapping()
 }

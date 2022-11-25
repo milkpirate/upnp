@@ -4,7 +4,7 @@ import (
 	// "bufio"
 	"fmt"
 
-	"github.com/scottjg/upnp"
+	"github.com/milkpirate/upnp"
 	// "os"
 )
 
@@ -14,7 +14,7 @@ func main() {
 	AddPortMapping()
 }
 
-// Search gateway device
+// SearchGateway Search gateway device
 func SearchGateway() {
 	upnpMan := new(upnp.Upnp)
 	err := upnpMan.SearchGateway()
@@ -26,7 +26,7 @@ func SearchGateway() {
 	}
 }
 
-// Obtain public ip address
+// ExternalIPAddr Obtain public ip address
 func ExternalIPAddr() {
 	upnpMan := new(upnp.Upnp)
 	err := upnpMan.ExternalIPAddr()
@@ -37,10 +37,10 @@ func ExternalIPAddr() {
 	}
 }
 
-// Add a port mapping
+// AddPortMapping Add a port mapping
 func AddPortMapping() {
 	mapping := new(upnp.Upnp)
-	if err := mapping.AddPortMapping(55789, 55789, 0, "TCP"); err == nil {
+	if err := mapping.AddPortMapping(55789, 55789, 0, "TCP", "single port"); err == nil {
 		fmt.Println("Port mapping succeeded.")
 		mapping.Reclaim()
 	} else {
