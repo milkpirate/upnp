@@ -1,18 +1,22 @@
 package upnp
 
 import (
-	// "fmt"
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/davecgh/go-spew/spew"
 )
+// Get the Gateway
 
+// Manage all Ports
 type MappingPortStruct struct {
 	lock         *sync.Mutex
 	mappingPorts map[string][][]int
 }
 
+// Add a port mapping record
+// only map management
 func (this *MappingPortStruct) addMapping(localPort, remotePort int, protocol string) {
 
 	this.lock.Lock()
@@ -42,6 +46,8 @@ func (this *MappingPortStruct) addMapping(localPort, remotePort int, protocol st
 	this.mappingPorts[protocol] = [][]int{one, two}
 }
 
+// Delete a mapping record
+// only map management
 func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -52,7 +58,8 @@ func (this *MappingPortStruct) delMapping(remotePort int, protocol string) {
 	mappings := this.mappingPorts[protocol]
 	for i := 0; i < len(mappings[0]); i++ {
 		if mappings[1][i] == remotePort {
-			continue
+			// the map to delete
+			break
 		}
 		tmp.addMapping(mappings[0][i], mappings[1][i], protocol)
 	}
@@ -63,21 +70,23 @@ func (this *MappingPortStruct) GetAllMapping() map[string][][]int {
 }
 
 type Upnp struct {
-	Active              bool
+	Active              bool // is this upnp protocol available?
 	DurationUnsupported bool
-	LocalHost           string
-	GatewayInsideIP     string
-	GatewayOutsideIP    string
-	OutsideMappingPort  map[string]int
-	InsideMappingPort   map[string]int
-	Gateway             *Gateway
-	CtrlUrl             string
-	MappingPort         MappingPortStruct
+	LocalHost           string            // local (our) IP Address
+	GatewayInsideIP     string            // LAN Gateway IP
+	GatewayOutsideIP    string            // Gateway Public IP
+	OutsideMappingPort  map[string]int    // Map the external port
+	InsideMappingPort   map[string]int    // Map local port
+	Gateway             *Gateway          // Gateway information
+	CtrlUrl             string            // Control request URL
+	MappingPort         MappingPortStruct // Existing mappings, e.g {"TCP":[1990],"UDP":[1991]}
 }
 
+// SearchGateway gets the Gateway's LAN IP address
 func (this *Upnp) SearchGateway() (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
+			fmt.Println("SearchGateway:", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -85,6 +94,7 @@ func (this *Upnp) SearchGateway() (err error) {
 	if this.LocalHost == "" {
 		this.MappingPort = MappingPortStruct{
 			lock: new(sync.Mutex),
+			// mappingPorts: map[string][][]int{},
 		}
 		this.LocalHost = GetLocalIntenetIp()
 	}
@@ -99,6 +109,7 @@ func (this *Upnp) deviceStatus() {
 
 }
 
+// View the device description and get the control request URL
 func (this *Upnp) deviceDesc() (err error) {
 	if this.GatewayInsideIP == "" {
 		if err := this.SearchGateway(); err != nil {
@@ -108,9 +119,11 @@ func (this *Upnp) deviceDesc() (err error) {
 	device := DeviceDesc{upnp: this}
 	device.Send()
 	this.Active = true
+
 	return
 }
 
+// ExternalIPAddr gets our external IP address
 func (this *Upnp) ExternalIPAddr() (err error) {
 	if this.CtrlUrl == "" {
 		if err := this.deviceDesc(); err != nil {
@@ -119,12 +132,16 @@ func (this *Upnp) ExternalIPAddr() (err error) {
 	}
 	eia := ExternalIPAddress{upnp: this}
 	eia.Send()
+
 	return nil
 }
 
-func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol string, desc string) (err error) {
+// AddPortMapping adds a port mapping
+// TODO: accept an IP address to port forward to another LAN host(internalClient)
+func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, internalClient string, protocol string, desc string) (err error) {
 	defer func(err error) {
 		if errTemp := recover(); errTemp != nil {
+			fmt.Println("AddPortMapping:", errTemp)
 			err = errTemp.(error)
 		}
 	}(err)
@@ -134,20 +151,25 @@ func (this *Upnp) AddPortMapping(localPort, remotePort, duration int, protocol s
 		}
 	}
 	addPort := AddPortMapping{upnp: this}
-	if issuccess := addPort.Send(localPort, remotePort, duration, protocol, desc); issuccess {
+	if issuccess := addPort.Send(localPort, remotePort, duration, internalClient, protocol, desc); issuccess {
 		this.MappingPort.addMapping(localPort, remotePort, protocol)
+
 		return nil
 	} else {
 		this.Active = false
+		// fmt.Println("failed to add port mapping")
+		// TODO: is it possible to get an error from gateway instead of showing our own?
 		return errors.New("Adding a port mapping failed")
 	}
 }
 
+// DelPortMapping probably deletes a port mapping
 func (this *Upnp) DelPortMapping(remotePort int, protocol string) bool {
 	delMapping := DelPortMapping{upnp: this}
 	issuccess := delMapping.Send(remotePort, protocol)
 	if issuccess {
 		this.MappingPort.delMapping(remotePort, protocol)
+		fmt.Println("Removed a port mapping: remote:", remotePort)
 	}
 	return issuccess
 }
@@ -165,6 +187,7 @@ func (this *Upnp) GetGenericPortMappingEntry(index string) PortMappingEntry {
 	return portmap
 }
 
+// Reclaim recycles (deletes?) a port
 func (this *Upnp) Reclaim() {
 	mappings := this.MappingPort.GetAllMapping()
 	tcpMapping, ok := mappings["TCP"]
@@ -181,6 +204,8 @@ func (this *Upnp) Reclaim() {
 	}
 }
 
+// GetAllMapping returns all active mappings
+// TODO: for this host only?
 func (this *Upnp) GetAllMapping() map[string][][]int {
 	return this.MappingPort.GetAllMapping()
 }

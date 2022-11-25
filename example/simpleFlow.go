@@ -23,19 +23,19 @@ func youleTest() {
 	lAddr := "192.168.1.100"
 	rAddr := "192.168.1.2"
 	//---------------------------------------------------------
-	//      搜素网关设备
+	//      Search gateway equipment
 	//---------------------------------------------------------
 
 	searchDevice(lAddr+":9981", "239.255.255.250:1900")
 
 	//---------------------------------------------------------
-	//      查看设备描述
+	//      View the device description
 	//---------------------------------------------------------
 
 	// readDeviceDesc(rAddr + ":1900")
 
 	//---------------------------------------------------------
-	//      查看设备状态 SOAPAction: "urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo"\r\n
+	//      Check the device status SOAPAction: "urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo"\r\n
 	//---------------------------------------------------------
 	// getDeviceStatusInfo(rAddr + ":1900")
 	getDeviceStatusInfo(rAddr + ":56688")
@@ -51,19 +51,19 @@ func simple1() {
 	lAddr := "192.168.1.100"
 	rAddr := "192.168.1.1"
 	//---------------------------------------------------------
-	//      搜素网关设备
+	//      Search gateway equipment
 	//---------------------------------------------------------
 
 	searchDevice(lAddr+":9981", "239.255.255.250:1900")
 
 	//---------------------------------------------------------
-	//      查看设备描述
+	//      View the device description
 	//---------------------------------------------------------
 
 	// readDeviceDesc(rAddr + ":1900")
 
 	//---------------------------------------------------------
-	//      查看设备状态 SOAPAction: "urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo"\r\n
+	//      Check the device status SOAPAction: "urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo"\r\n
 	//---------------------------------------------------------
 	// getDeviceStatusInfo(rAddr + ":1900")
 
@@ -118,8 +118,8 @@ func readDeviceDesc(rAddr string) string {
 	chk(err)
 	fmt.Println(string(buf))
 
-	// //查看设备状态
-	// fmt.Println("查看设备状态")
+	// //Check the device status
+	// fmt.Println("Check the device status")
 	// statusHeader := `POST /ipc HTTP/1.1\r\n
 	// Content-Type: text/xml\r\n
 	// SOAPAction: "urn:schemas-upnp-org:device:InternetGatewayDevice:1#GetStatusInfo"\r\n
@@ -157,19 +157,19 @@ func getDeviceStatusInfo(rAddr string) {
 	</m:GetStatusInfo></SOAP-ENV:Body></SOAP-ENV:Envelope>`
 
 	client := &http.Client{}
-	// 第三个参数设置body部分
-	reqest, _ := http.NewRequest("POST", "http://"+rAddr+"/ipc", strings.NewReader(readMappingBody))
-	reqest.Proto = "HTTP/1.1"
-	reqest.Host = rAddr
+	// The third parameter sets the body part
+	request, _ := http.NewRequest("POST", "http://"+rAddr+"/ipc", strings.NewReader(readMappingBody))
+	request.Proto = "HTTP/1.1"
+	request.Host = rAddr
 
-	reqest.Header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
-	reqest.Header.Set("Content-Type", "text/xml")
-	reqest.Header.Set("SOAPAction", "\"urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo\"")
+	request.Header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
+	request.Header.Set("Content-Type", "text/xml")
+	request.Header.Set("SOAPAction", "\"urn:schemas-upnp-org:service:WANIPConnection:1#GetStatusInfo\"")
 
-	reqest.Header.Set("Connection", "Close")
-	reqest.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
+	request.Header.Set("Connection", "Close")
+	request.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
 
-	response, _ := client.Do(reqest)
+	response, _ := client.Do(request)
 
 	body, _ := ioutil.ReadAll(response.Body)
 	//bodystr := string(body)
@@ -201,19 +201,19 @@ func addPortMapping(rAddr string) {
 </SOAP-ENV:Envelope>`
 
 	client := &http.Client{}
-	// 第三个参数设置body部分
-	reqest, _ := http.NewRequest("POST", "http://"+rAddr+"/ipc", strings.NewReader(readMappingBody))
-	reqest.Proto = "HTTP/1.1"
-	reqest.Host = rAddr
+	// The third parameter sets the body part
+	request, _ := http.NewRequest("POST", "http://"+rAddr+"/ipc", strings.NewReader(readMappingBody))
+	request.Proto = "HTTP/1.1"
+	request.Host = rAddr
 
-	reqest.Header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
-	reqest.Header.Set("Content-Type", "text/xml")
-	reqest.Header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#AddPortMapping"`)
+	request.Header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
+	request.Header.Set("Content-Type", "text/xml")
+	request.Header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#AddPortMapping"`)
 
-	reqest.Header.Set("Connection", "Close")
-	reqest.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
+	request.Header.Set("Connection", "Close")
+	request.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
 
-	response, _ := client.Do(reqest)
+	response, _ := client.Do(request)
 
 	body, _ := ioutil.ReadAll(response.Body)
 	//bodystr := string(body)
@@ -239,19 +239,19 @@ func remotePort(rAddr string) {
 </SOAP-ENV:Envelope>`
 
 	client := &http.Client{}
-	// 第三个参数设置body部分
-	reqest, _ := http.NewRequest("POST", "http://"+rAddr+"/ipc", strings.NewReader(readMappingBody))
-	reqest.Proto = "HTTP/1.1"
-	reqest.Host = rAddr
+	// The third parameter sets the body part
+	request, _ := http.NewRequest("POST", "http://"+rAddr+"/ipc", strings.NewReader(readMappingBody))
+	request.Proto = "HTTP/1.1"
+	request.Host = rAddr
 
-	reqest.Header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
-	reqest.Header.Set("Content-Type", "text/xml")
-	reqest.Header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#DeletePortMapping"`)
+	request.Header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
+	request.Header.Set("Content-Type", "text/xml")
+	request.Header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#DeletePortMapping"`)
 
-	reqest.Header.Set("Connection", "Close")
-	reqest.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
+	request.Header.Set("Connection", "Close")
+	request.Header.Set("Content-Length", string(len([]byte(readMappingBody))))
 
-	response, _ := client.Do(reqest)
+	response, _ := client.Do(request)
 
 	body, _ := ioutil.ReadAll(response.Body)
 	//bodystr := string(body)

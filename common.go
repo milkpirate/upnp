@@ -7,11 +7,12 @@ import (
 	"strings"
 )
 
-//获取本机能联网的ip地址
+// GetLocalIntenetIp returns all local addresses,
+// checks internet connectivity
 func GetLocalIntenetIp() string {
 	/*
-	  获得所有本机地址
-	  判断能联网的ip地址
+	  Get all local addresses
+	  Check for internet connectivity
 	*/
 
 	conn, err := net.Dial("udp4", "google.com:80")

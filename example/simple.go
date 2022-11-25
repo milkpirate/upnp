@@ -4,7 +4,7 @@ import (
 	// "bufio"
 	"fmt"
 
-	"github.com/fdurand/upnp"
+	"github.com/scottjg/upnp"
 	// "os"
 )
 
@@ -14,7 +14,7 @@ func main() {
 	AddPortMapping()
 }
 
-//搜索网关设备
+// Search gateway device
 func SearchGateway() {
 	upnpMan := new(upnp.Upnp)
 	err := upnpMan.SearchGateway()
@@ -26,7 +26,7 @@ func SearchGateway() {
 	}
 }
 
-//获得公网ip地址
+// Obtain public ip address
 func ExternalIPAddr() {
 	upnpMan := new(upnp.Upnp)
 	err := upnpMan.ExternalIPAddr()
@@ -37,7 +37,7 @@ func ExternalIPAddr() {
 	}
 }
 
-//添加一个端口映射
+// Add a port mapping
 func AddPortMapping() {
 	mapping := new(upnp.Upnp)
 	if err := mapping.AddPortMapping(55789, 55789, 0, "TCP"); err == nil {

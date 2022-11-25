@@ -22,14 +22,14 @@ func (this *DeviceDesc) Send() bool {
 	return false
 }
 func (this *DeviceDesc) BuildRequest() *http.Request {
-	//请求头
+	// Request header
 	header := http.Header{}
 	header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
-	header.Set("User-Agent", "preston")
+	header.Set("User-Agent", "go upnp")
 	header.Set("Host", this.upnp.Gateway.Host)
 	header.Set("Connection", "keep-alive")
 
-	//请求
+	// Request
 	request, _ := http.NewRequest("GET", "http://"+this.upnp.Gateway.Host+this.upnp.Gateway.DeviceDescUrl, nil)
 	request.Header = header
 	// request := http.Request{Method: "GET", Proto: "HTTP/1.1",
@@ -40,7 +40,7 @@ func (this *DeviceDesc) BuildRequest() *http.Request {
 func (this *DeviceDesc) resolve(resultStr string) {
 	inputReader := strings.NewReader(resultStr)
 
-	// 从文件读取，如可以如下：
+	// Read from the file as follows：
 	// content, err := ioutil.ReadFile("studygolang.xml")
 	// decoder := xml.NewDecoder(bytes.NewBuffer(content))
 
@@ -56,22 +56,22 @@ func (this *DeviceDesc) resolve(resultStr string) {
 	decoder := xml.NewDecoder(inputReader)
 	for t, err := decoder.Token(); err == nil && !IScontrolURL; t, err = decoder.Token() {
 		switch token := t.(type) {
-		// 处理元素开始（标签）
+		// Processing element start (label)
 		case xml.StartElement:
 			if ISUpnpServer {
 				name := token.Name.Local
 				lastLabel = name
 			}
 
-		// 处理元素结束（标签）
+		// Process element end (label)
 		case xml.EndElement:
-			// log.Println("结束标记：", token.Name.Local)
-		// 处理字符数据（这里就是元素的文本）
+			// log.Println("End tag:", token.Name.Local)
+		// Processing character data (here is the text of the element)
 		case xml.CharData:
-			//得到url后其他标记就不处理了
+			// Get url after the other tags will not be processed
 			content := string([]byte(token))
 
-			//找到提供端口映射的服务
+			// Find the service that provides port mapping
 			if content == this.upnp.Gateway.ServiceType {
 				ISUpnpServer = true
 				continue
@@ -90,7 +90,7 @@ func (this *DeviceDesc) resolve(resultStr string) {
 				}
 			}
 		default:
-			// ...
+			// TODO:?
 		}
 	}
 	this.upnp.CtrlUrl = controlURL

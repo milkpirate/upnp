@@ -9,15 +9,15 @@ import (
 )
 
 type Gateway struct {
-	GatewayName   string //网关名称
-	Host          string //网关ip和端口
-	DeviceDescUrl string //网关设备描述路径
-	Cache         string //cache
+	GatewayName   string
+	Host          string
+	DeviceDescUrl string
+	Cache         string
 	ST            string
 	USN           string
-	deviceType    string //设备的urn   "urn:schemas-upnp-org:service:WANIPConnection:1"
-	ControlURL    string //设备端口映射请求路径
-	ServiceType   string //提供upnp服务的服务类型
+	deviceType    string // Device URN   "urn:schemas-upnp-org:service:WANIPConnection:1"
+	ControlURL    string
+	ServiceType   string
 }
 
 type SearchGateway struct {
@@ -31,7 +31,7 @@ func (this *SearchGateway) Send() bool {
 	go this.send(c)
 	result := <-c
 	if result == "" {
-		//超时了
+		// time out
 		this.upnp.Active = false
 		return false
 	}
@@ -42,20 +42,20 @@ func (this *SearchGateway) Send() bool {
 	return true
 }
 func (this *SearchGateway) send(c chan string) {
-	//发送组播消息，要带上端口，格式如："239.255.255.250:1900"
+	// Send multicast messages, to bring the port, the format as："239.255.255.250:1900"
 	var conn *net.UDPConn
 	defer func() {
 		if r := recover(); r != nil {
-			//超时了
+			// Time out
 		}
 	}()
 	go func(conn *net.UDPConn) {
 		defer func() {
 			if r := recover(); r != nil {
-				//没超时
+				// No overtime
 			}
 		}()
-		//超时时间为3秒
+		// The timeout is 3 seconds
 		time.Sleep(time.Second * 3)
 		c <- ""
 		conn.Close()
@@ -103,7 +103,7 @@ func (this *SearchGateway) resolve(result string) {
 
 	lines := strings.Split(result, "\r\n")
 	for _, line := range lines {
-		//按照第一个冒号分为两个字符串
+		// According to the first colon is divided into two strings
 		nameValues := strings.SplitAfterN(line, ":", 2)
 		if len(nameValues) < 2 {
 			continue

@@ -12,6 +12,7 @@ type DelPortMapping struct {
 	upnp *Upnp
 }
 
+// Send sends a request to delete a port mapping
 func (this *DelPortMapping) Send(remotePort int, protocol string) bool {
 	request := this.buildRequest(remotePort, protocol)
 	response, _ := http.DefaultClient.Do(request)
@@ -24,7 +25,7 @@ func (this *DelPortMapping) Send(remotePort int, protocol string) bool {
 	return false
 }
 func (this *DelPortMapping) buildRequest(remotePort int, protocol string) *http.Request {
-	//请求头
+	// Request header
 	header := http.Header{}
 	header.Set("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
 	header.Set("SOAPAction", `"urn:schemas-upnp-org:service:WANIPConnection:1#DeletePortMapping"`)
@@ -32,7 +33,7 @@ func (this *DelPortMapping) buildRequest(remotePort int, protocol string) *http.
 	header.Set("Connection", "Close")
 	header.Set("Content-Length", "")
 
-	//请求体
+	// Request body
 	body := Node{Name: "SOAP-ENV:Envelope",
 		Attr: map[string]string{"xmlns:SOAP-ENV": `"http://schemas.xmlsoap.org/soap/envelope/"`,
 			"SOAP-ENV:encodingStyle": `"http://schemas.xmlsoap.org/soap/encoding/"`}}
@@ -49,7 +50,7 @@ func (this *DelPortMapping) buildRequest(remotePort int, protocol string) *http.
 	body.AddChild(childOne)
 	bodyStr := body.BuildXML()
 
-	//请求
+	// Request
 	request, _ := http.NewRequest("POST", "http://"+this.upnp.Gateway.Host+this.upnp.CtrlUrl,
 		strings.NewReader(bodyStr))
 	request.Header = header
